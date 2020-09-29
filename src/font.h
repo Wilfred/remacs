@@ -244,6 +244,10 @@ struct font_spec
   Lisp_Object props[FONT_SPEC_MAX];
 };
 
+extern
+Lisp_Object
+font_make_spec (void);
+
 /* Structure for a font-entity.  */
 
 struct font_entity

@@ -668,15 +668,25 @@ LIBEGNU_ARCHIVE = $(lib)/lib$(if $(HYBRID_MALLOC),e)gnu.a
 $(LIBEGNU_ARCHIVE): $(config_h)
 	$(MAKE) -C $(lib) all
 
+unittests: $(LIBXMENU) $(ALLOBJS) \
+	         $(LIBREMACS_ARCHIVE) $(RUSTFLAGS_FILE) \
+	         $(LIBEGNU_ARCHIVE) $(EMACSRES) ${charsets} ${charscript} \
+		unittests.o
+	$(CC) $(ALL_CFLAGS) $(TEMACS_LDFLAGS) $(LDFLAGS) \
+          -o unittests $(ALLOBJS) unittests.o $(LIBEGNU_ARCHIVE) $(W32_RES_LINK) $(LIBES)
+        # The || true is there because the unittests binary was being deleted
+        # when it failed.
+	RUST_BACKTRACE=1 ./unittests || true
+
 ## We have to create $(etc) here because init_cmdargs tests its
 ## existence when setting Vinstallation_directory (FIXME?).
 ## This goes on to affect various things, and the emacs binary fails
 ## to start if Vinstallation_directory has the wrong value.
-temacs$(EXEEXT): $(LIBXMENU) $(ALLOBJS) \
+temacs$(EXEEXT): $(LIBXMENU) $(ALLOBJS) main.o \
 	         $(LIBREMACS_ARCHIVE) $(RUSTFLAGS_FILE) \
-	         $(LIBEGNU_ARCHIVE) $(EMACSRES) ${charsets} ${charscript}
+	         $(LIBEGNU_ARCHIVE) $(EMACSRES) ${charsets} ${charscript} unittests
 	$(AM_V_CCLD)$(CC) $(ALL_CFLAGS) $(TEMACS_LDFLAGS) $(LDFLAGS) \
-	  -o temacs $(ALLOBJS) $(LIBEGNU_ARCHIVE) $(W32_RES_LINK) $(LIBES)
+	  -o temacs $(ALLOBJS) main.o $(LIBEGNU_ARCHIVE) $(W32_RES_LINK) $(LIBES)
 	$(MKDIR_P) $(etc)
 ifneq ($(CANNOT_DUMP),yes)
   ifneq ($(PAXCTL_notdumped),)

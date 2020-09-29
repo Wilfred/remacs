@@ -339,7 +339,7 @@ setlocale (int cat, char const *locale)
 #endif
 
 /* True if the current system locale uses UTF-8 encoding.  */
-static bool
+bool
 using_utf8 (void)
 {
 #ifdef HAVE_WCHAR_H
@@ -631,9 +631,59 @@ close_output_streams (void)
     _exit (EXIT_FAILURE);
 }
 
+void
+do_init_stage ()
+{
+  init_alloc_once ();
+  init_threads_once ();
+  init_obarray ();
+  init_eval_once ();
+  init_charset_once ();
+  init_coding_once ();
+  init_syntax_once ();	/* Create standard syntax table.  */
+  init_category_once ();	/* Create standard category table.  */
+  init_casetab_once ();	/* Must be done before init_buffer_once.  */
+  init_buffer_once ();	/* Create buffer table and some buffers.  */
+  init_minibuf_once ();	/* Create list of minibuffers.  */
+  /* Must precede init_window_once.  */
+
+  /* Call syms_of_xfaces before init_window_once because that
+     function creates Vterminal_frame.  Termcap frames now use
+     faces, and the face implementation uses some symbols as
+     face names.  */
+  syms_of_xfaces ();
+  /* XXX syms_of_keyboard uses some symbols in keymap.c.  It would
+     be better to arrange things not to have this dependency.  */
+  syms_of_keymap ();
+  /* Call syms_of_keyboard before init_window_once because
+     keyboard sets up symbols that include some face names that
+     the X support will want to use.  This can happen when
+     CANNOT_DUMP is defined.  */
+  syms_of_keyboard ();
+
+  /* Called before syms_of_fileio, because it sets up Qerror_condition.  */
+  syms_of_data ();
+  syms_of_fns ();  /* Before syms_of_charset which uses hash tables.  */
+  syms_of_fileio ();
+  /* Before syms_of_coding to initialize Vgc_cons_threshold.  */
+  syms_of_alloc ();
+  /* May call Ffuncall and so GC, thus the latter should be initialized.  */
+  init_print_once ();
+  /* Before syms_of_coding because it initializes Qcharsetp.  */
+  syms_of_charset ();
+  /* Before init_window_once, because it sets up the
+     Vcoding_system_hash_table.  */
+  syms_of_coding ();	/* This should be after syms_of_fileio.  */
+
+  init_window_once ();	/* Init the window system.  */
+#ifdef HAVE_WINDOW_SYSTEM
+  init_fringe_once ();	/* Swap bitmaps if necessary.  */
+#endif /* HAVE_WINDOW_SYSTEM */
+}
+
 /* ARGSUSED */
 int
-main (int argc, char **argv)
+emacs_main (int argc, char **argv)
 {
   /* Variable near the bottom of the stack, and aligned appropriately
      for pointers.  */
@@ -1154,51 +1204,7 @@ Using an Emacs configured with --with-x-toolkit=lucid does not have this problem
 
   if (!initialized)
     {
-      init_alloc_once ();
-      init_threads_once ();
-      init_obarray ();
-      init_eval_once ();
-      init_charset_once ();
-      init_coding_once ();
-      init_syntax_once ();	/* Create standard syntax table.  */
-      init_category_once ();	/* Create standard category table.  */
-      init_casetab_once ();	/* Must be done before init_buffer_once.  */
-      init_buffer_once ();	/* Create buffer table and some buffers.  */
-      init_minibuf_once ();	/* Create list of minibuffers.  */
-				/* Must precede init_window_once.  */
-
-      /* Call syms_of_xfaces before init_window_once because that
-	 function creates Vterminal_frame.  Termcap frames now use
-	 faces, and the face implementation uses some symbols as
-	 face names.  */
-      syms_of_xfaces ();
-      /* XXX syms_of_keyboard uses some symbols in keymap.c.  It would
-         be better to arrange things not to have this dependency.  */
-      syms_of_keymap ();
-      /* Call syms_of_keyboard before init_window_once because
-	 keyboard sets up symbols that include some face names that
-	 the X support will want to use.  This can happen when
-	 CANNOT_DUMP is defined.  */
-      syms_of_keyboard ();
-
-      /* Called before syms_of_fileio, because it sets up Qerror_condition.  */
-      syms_of_data ();
-      syms_of_fns ();  /* Before syms_of_charset which uses hash tables.  */
-      syms_of_fileio ();
-      /* Before syms_of_coding to initialize Vgc_cons_threshold.  */
-      syms_of_alloc ();
-      /* May call Ffuncall and so GC, thus the latter should be initialized.  */
-      init_print_once ();
-      /* Before syms_of_coding because it initializes Qcharsetp.  */
-      syms_of_charset ();
-      /* Before init_window_once, because it sets up the
-	 Vcoding_system_hash_table.  */
-      syms_of_coding ();	/* This should be after syms_of_fileio.  */
-
-      init_window_once ();	/* Init the window system.  */
-#ifdef HAVE_WINDOW_SYSTEM
-      init_fringe_once ();	/* Swap bitmaps if necessary.  */
-#endif /* HAVE_WINDOW_SYSTEM */
+      do_init_stage ();
     }
 
   init_alloc ();

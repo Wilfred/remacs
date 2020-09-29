@@ -151,7 +151,7 @@ valid_font_driver (struct font_driver const *drv)
 
 /* Creators of font-related Lisp object.  */
 
-static Lisp_Object
+Lisp_Object
 font_make_spec (void)
 {
   Lisp_Object font_spec;

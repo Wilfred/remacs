@@ -20,6 +20,7 @@ use crate::{
     lists::{inorder, nth, sort_list},
     multibyte::MAX_CHAR,
     process::LispProcessRef,
+    remacs_sys::Fmake_vector,
     remacs_sys::{
         equal_kind, pvec_type, EmacsInt, Lisp_Bool_Vector, Lisp_Type, Lisp_Vector, Lisp_Vectorlike,
         Lisp_Vectorlike_With_Slots, More_Lisp_Bits, BITS_PER_BITS_WORD, BOOL_VECTOR_BITS_PER_CHAR,
@@ -466,6 +467,12 @@ macro_rules! impl_vectorlike_ref {
 }
 
 impl_vectorlike_ref! { LispVectorRef, LispVecIterator, ptrdiff_t::max_value() }
+impl From<LispObject> for LispVectorRef {
+    fn from(o: LispObject) -> Self {
+        o.as_vector_or_error()
+    }
+}
+
 impl_vectorlike_ref! { LispVectorlikeSlotsRef, LispVecSlotsIterator,
 More_Lisp_Bits::PSEUDOVECTOR_SIZE_MASK as isize }
 
@@ -767,6 +774,15 @@ lazy_static! {
     pub static ref HEADER_SIZE: usize =
         unsafe { offset_of!(crate::remacs_sys::Lisp_Vector, contents) };
     pub static ref WORD_SIZE: usize = ::std::mem::size_of::<crate::lisp::LispObject>();
+}
+
+#[no_mangle]
+pub extern "C" fn test_vectors() {
+    let vec1 = unsafe { Fmake_vector(10.into(), 3.into()) };
+    let vec_ref: LispVectorRef = vec1.into();
+    let vec2: LispObject = vec_ref.into();
+
+    assert_eq!(vec1, vec2);
 }
 
 include!(concat!(env!("OUT_DIR"), "/vectors_exports.rs"));

@@ -13,7 +13,7 @@ use crate::{
     obarray::intern,
     remacs_sys::font_match_p as c_font_match_p,
     remacs_sys::font_property_index::FONT_TYPE_INDEX,
-    remacs_sys::{font_add_log, font_at, font_list_entities, font_sort_entities},
+    remacs_sys::{font_add_log, font_at, font_list_entities, font_make_spec, font_sort_entities},
     remacs_sys::{
         pvec_type, Lisp_Font_Object, Lisp_Font_Spec, Lisp_Type, FONT_ENTITY_MAX, FONT_OBJECT_MAX,
         FONT_SPEC_MAX,
@@ -380,6 +380,15 @@ pub fn frame_font_cache(_frame: LispFrameLiveOrSelected) -> LispObject {
     {
         Qnil
     }
+}
+
+#[no_mangle]
+pub extern "C" fn test_font_spec() {
+    let spec1 = unsafe { font_make_spec() };
+    let spec_ref: LispFontSpecRef = spec1.into();
+    let spec2 = spec_ref.into();
+
+    assert_eq!(spec1, spec2);
 }
 
 include!(concat!(env!("OUT_DIR"), "/fonts_exports.rs"));
