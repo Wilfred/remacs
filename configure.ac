@@ -1538,6 +1538,9 @@ AC_DEFUN([AC_TYPE_SIZE_T])
 # Likewise for obsolescent test for uid_t, gid_t; Emacs assumes them.
 AC_DEFUN([AC_TYPE_UID_T])
 
+# Make sure CLANG libraries are present
+AC_CHECK_LIB([clang], [main], [], [AC_MSG_ERROR("Cannot find clang library")])
+
 # sqrt and other floating-point functions such as fmod and frexp
 # are found in -lm on many systems.
 OLD_LIBS=$LIBS
