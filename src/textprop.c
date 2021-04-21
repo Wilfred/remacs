@@ -550,33 +550,6 @@ interval_of (ptrdiff_t position, Lisp_Object object)
 
   return find_interval (i, position);
 }
-
-DEFUN ("text-properties-at", Ftext_properties_at,
-       Stext_properties_at, 1, 2, 0,
-       doc: /* Return the list of properties of the character at POSITION in OBJECT.
-If the optional second argument OBJECT is a buffer (or nil, which means
-the current buffer), POSITION is a buffer position (integer or marker).
-If OBJECT is a string, POSITION is a 0-based index into it.
-If POSITION is at the end of OBJECT, the value is nil.  */)
-  (Lisp_Object position, Lisp_Object object)
-{
-  register INTERVAL i;
-
-  if (NILP (object))
-    XSETBUFFER (object, current_buffer);
-
-  i = validate_interval_range (object, &position, &position, soft);
-  if (!i)
-    return Qnil;
-  /* If POSITION is at the end of the interval,
-     it means it's the end of OBJECT.
-     There are no properties at the very end,
-     since no character follows.  */
-  if (XINT (position) == LENGTH (i) + i->position)
-    return Qnil;
-
-  return i->plist;
-}
 
 /* Return the value of char's property PROP, in OBJECT at POSITION.
    OBJECT is optional and defaults to the current buffer.
@@ -2327,7 +2300,6 @@ inherits it if NONSTICKINESS is nil.  The `front-sticky' and
   DEFSYM (Qpoint_left, "point-left");
   DEFSYM (Qpoint_entered, "point-entered");
 
-  defsubr (&Stext_properties_at);
   defsubr (&Sget_char_property_and_overlay);
   defsubr (&Snext_char_property_change);
   defsubr (&Sprevious_char_property_change);
